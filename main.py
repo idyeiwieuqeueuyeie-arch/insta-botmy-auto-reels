@@ -3,31 +3,29 @@ import time
 import random
 import threading
 from instagrapi import Client
-from datetime import datetime
 from flask import Flask
 
-# 1. تشغيل السيرفر لإرضاء موقع Render
+# 1. إعداد السيرفر (عشان Render يقول Live)
 app = Flask('')
 @app.route('/')
-def home(): return "Bot is Alive!"
+def home(): return "<h1>Bot is Active!</h1>"
 
 def run_web():
     port = int(os.environ.get("PORT", 10000))
     app.run(host='0.0.0.0', port=port)
 
-# 2. إعدادات البوت (تأكد من اليوزر والباسورد)
+# 2. إعدادات البوت
 USER = "ug.31"
 PASS = ".736alameri."
 KEYWORDS = ["نصائح", "حكم", "عبارات"]
-
 cl = Client()
 
-# 3. محرك البوت (الذي سينفذ المهمة)
+# 3. وظيفة البوت (المحرك)
 def start_bot():
-    print("🚀 جاري محاولة الدخول...")
+    print("🚀 جاري بدء محرك البوت...")
     try:
         cl.login(USER, PASS)
-        print("✅ تم تسجيل الدخول بنجاح!")
+        print("✅✅ تم تسجيل الدخول بنجاح!")
     except Exception as e:
         print(f"❌ فشل الدخول: {e}")
         return
@@ -35,29 +33,28 @@ def start_bot():
     while True:
         try:
             tag = random.choice(KEYWORDS)
-            print(f"🔍 البحث في هاشتاج #{tag}")
+            print(f"🔍 جاري البحث في #{tag}...")
             medias = cl.hashtag_medias_top(tag, amount=5)
             for m in medias:
                 if m.view_count > 500000 and m.media_type == 2:
-                    print(f"🎥 تم العثور على فيديو (مشاهدات: {m.view_count})")
+                    print(f"🎥 تم العثور على ريلز (مشاهدات: {m.view_count})")
                     path = cl.video_download(m.pk, "./temp")
                     cl.video_upload(path, f"{m.caption_text}\n.\nتابعني للمزيد ❤️")
-                    if os.path.exists(path): os.remove(path)
                     print("🎉 تم النشر بنجاح!")
+                    if os.path.exists(path): os.remove(path)
                     time.sleep(14400) # انتظار 4 ساعات
                     break
             time.sleep(60)
         except Exception as e:
-            print(f"⚠️ خطأ: {e}")
+            print(f"⚠️ خطأ أثناء العمل: {e}")
             time.sleep(60)
 
-# 4. تشغيل المسارين معاً (المسار الصحيح)
+# 4. نقطة الانطلاق (التشغيل الصحيح لـ Render)
 if __name__ == "__main__":
-    # تشغيل السيرفر في خيط مستقل
-    web_thread = threading.Thread(target=run_web)
-    web_thread.daemon = True
-    web_thread.start()
+    # تشغيل البوت في خيط (Thread) لكي لا يحبسه السيرفر
+    t = threading.Thread(target=start_bot)
+    t.start()
     
-    # تشغيل البوت في المسار الرئيسي
-    start_bot()
+    # تشغيل السيرفر في المسار الرئيسي
+    run_web()
     
